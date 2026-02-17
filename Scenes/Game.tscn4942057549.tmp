@@ -1,0 +1,76 @@
+[gd_scene load_steps=5 format=3 uid="uid://br62pn2xq4lod"]
+
+[ext_resource type="PackedScene" uid="uid://bsh87momn81uf" path="res://Scenes/Grid/Tile.tscn" id="1_iukft"]
+[ext_resource type="Script" uid="uid://dtbrcmfjsku7o" path="res://Scripts/GameManager.gd" id="1_j5yw3"]
+[ext_resource type="PackedScene" uid="uid://dcl768gtkchcy" path="res://UI/TowerButton.tscn" id="2_gl6un"]
+
+[sub_resource type="Curve2D" id="Curve2D_j5yw3"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 32, 24, 0, 0, 0, 0, 96, 32, 0, 0, 0, 0, 96, 96, 0, 0, 0, 0, 104, 152, 0, 0, 0, 0, 168, 160, 0, 0, 0, 0, 232, 160, 0, 0, 0, 0, 288, 160, 0, 0, 0, 0, 352, 152)
+}
+point_count = 8
+
+[node name="Main" type="Node2D"]
+
+[node name="GameManager" type="Node2D" parent="."]
+script = ExtResource("1_j5yw3")
+
+[node name="GridManager" type="Node2D" parent="GameManager"]
+
+[node name="UI" type="CanvasLayer" parent="GameManager"]
+
+[node name="Currency" type="Label" parent="GameManager/UI"]
+offset_left = 336.0
+offset_top = 32.0
+offset_right = 452.0
+offset_bottom = 55.0
+
+[node name="Wave" type="Label" parent="GameManager/UI"]
+offset_left = 400.0
+offset_right = 440.0
+offset_bottom = 23.0
+
+[node name="TowerShop" parent="GameManager/UI" instance=ExtResource("2_gl6un")]
+offset_left = 448.0
+offset_right = -480.0
+
+[node name="Path2D" type="Path2D" parent="GameManager"]
+curve = SubResource("Curve2D_j5yw3")
+
+[node name="EnemySpawner" type="Node2D" parent="GameManager"]
+
+[node name="VisualElements" type="Node" parent="."]
+
+[node name="Tile_test" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(256, 64)
+
+[node name="Tile_test2" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(128, 0)
+
+[node name="Tile_test3" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(0, 136)
+
+[node name="Tile_test4" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(128, 64)
+
+[node name="Tile_test5" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(256, 192)
+
+[node name="Tile_test6" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(192, 192)
+
+[node name="Tile_test7" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(0, 192)
+
+[node name="Tile_test8" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(320, 192)
+
+[node name="Tile_test9" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(128, 192)
+
+[node name="Tile_test10" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(64, 192)
+
+[node name="GameElements" type="Node2D" parent="."]
+
+[node name="Towers" type="Node2D" parent="."]

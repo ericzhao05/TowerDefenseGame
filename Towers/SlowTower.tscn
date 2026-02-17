@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=3 uid="uid://dkv17kv8rtfh4"]
+
+[ext_resource type="Script" uid="uid://n41e5qq83pkt" path="res://Scripts/tower_slow.gd" id="1_by8hh"]
+[ext_resource type="Texture2D" uid="uid://cdvnweesn8dpd" path="res://Sprites/Baby Chicken Yellow.png" id="2_vf5l6"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_i7oyj"]
+radius = 120.0
+
+[sub_resource type="Gradient" id="Gradient_u8fle"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_citq8"]
+gradient = SubResource("Gradient_u8fle")
+
+[node name="SlowTower" type="Area2D"]
+collision_mask = 2
+script = ExtResource("1_by8hh")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_vf5l6")
+
+[node name="Range" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_i7oyj")
+
+[node name="AttackTimer" type="Timer" parent="."]
+wait_time = 2.0
+
+[node name="UpgradeAnimation" type="AnimationPlayer" parent="."]
+root_node = NodePath("../AttackTimer")
+
+[node name="Aura" type="Sprite2D" parent="."]
+texture = SubResource("GradientTexture2D_citq8")

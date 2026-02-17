@@ -1,0 +1,68 @@
+[gd_scene load_steps=5 format=3 uid="uid://br62pn2xq4lod"]
+
+[ext_resource type="PackedScene" uid="uid://bsh87momn81uf" path="res://Scenes/Grid/Tile.tscn" id="1_iukft"]
+[ext_resource type="Script" uid="uid://dtbrcmfjsku7o" path="res://Scripts/GameManager.gd" id="1_j5yw3"]
+[ext_resource type="PackedScene" uid="uid://dcl768gtkchcy" path="res://UI/tower_shop.tscn" id="2_gl6un"]
+
+[sub_resource type="Curve2D" id="Curve2D_j5yw3"]
+
+[node name="Main" type="Node2D"]
+
+[node name="GameManager" type="Node2D" parent="."]
+script = ExtResource("1_j5yw3")
+
+[node name="VisualElements" type="Node" parent="."]
+
+[node name="Tile_test" parent="VisualElements" instance=ExtResource("1_iukft")]
+
+[node name="Tile_test2" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(64, 64)
+
+[node name="Tile_test3" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(0, 64)
+
+[node name="Tile_test4" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(128, 64)
+
+[node name="Tile_test5" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(256, 192)
+
+[node name="Tile_test6" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(192, 192)
+
+[node name="Tile_test7" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(0, 192)
+
+[node name="Tile_test8" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(192, 64)
+
+[node name="Tile_test9" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(128, 192)
+
+[node name="Tile_test10" parent="VisualElements" instance=ExtResource("1_iukft")]
+position = Vector2(64, 192)
+
+[node name="GameElements" type="Node2D" parent="."]
+
+[node name="GridManager" type="Node2D" parent="GameElements"]
+
+[node name="Path2D" type="Path2D" parent="GameElements"]
+curve = SubResource("Curve2D_j5yw3")
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Towers" type="Node2D" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Currency" type="Label" parent="UI"]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Wave" type="Label" parent="UI"]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="TowerShop" parent="UI" instance=ExtResource("2_gl6un")]
+offset_left = 448.0
+offset_right = -480.0

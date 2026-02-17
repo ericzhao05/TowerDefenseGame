@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3 uid="uid://dcl768gtkchcy"]
+
+[ext_resource type="Script" uid="uid://bxoftxdfrb7wh" path="res://UI/tower_shop.gd" id="1_d7re1"]
+
+[node name="TowerShop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_d7re1")
+
+[node name="ButtonContainer" type="GridContainer" parent="."]
+layout_mode = 0
+offset_top = 32.0
+offset_right = 256.0
+offset_bottom = 128.0
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 20
+
+[node name="Background" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+offset_top = 24.0
+offset_right = 320.0
+offset_bottom = 256.0
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_right = 107.0
+offset_bottom = 23.0
+text = "Tower Shop"
+
+[node name="NotEnoughMoneyLabel" type="Label" parent="."]
+visible = false
+layout_mode = 0
+offset_top = 136.0
+offset_right = 160.0
+offset_bottom = 185.0
+theme_override_colors/font_color = Color(0.98039216, 0, 0, 1)
+text = "Not Enough Money
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CurrencyLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 232.0
+offset_right = 135.0
+offset_bottom = 255.0
+text = "Currency $150"

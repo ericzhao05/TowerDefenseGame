@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://dqg6na2smklb2"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_wcai7"]
+radius = 150.0
+
+[node name="TowerBase" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="Range" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_wcai7")
+
+[node name="Attacktimer" type="Timer" parent="."]
