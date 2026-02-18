@@ -78,11 +78,11 @@ func _on_tower_placed(tower_type, _grid_pos):
 # ── Stat displays ─────────────────────────────────────────────────────────────
 func _on_currency_changed(new_amount):
 	if currency_label:
-		currency_label.text = "Gold: $" + str(new_amount)
+		currency_label.text = ": $" + str(new_amount)
 
 func _on_gems_changed(new_amount):
 	if gems_label:
-		gems_label.text = "Gems: " + str(new_amount)
+		gems_label.text = ": " + str(new_amount)
 
 func _on_lives_changed(new_lives):
 	if lives_label:
