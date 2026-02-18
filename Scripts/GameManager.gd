@@ -14,7 +14,7 @@ var currency: int = 300 :
 		currency = value
 		emit_signal("currency_changed", currency)
 
-var gems: int = 3 :
+var gems: int = 10 :
 	set(value):
 		gems = value
 		emit_signal("gems_changed", gems)
@@ -79,22 +79,25 @@ func skip_to_next_level():
 	_grant_level_start_resources(current_level)
 	emit_signal("level_ready", current_level)
 
-# ── Bonus resources granted at the start of each level (except Level 1) ──────
+# ── Hard-reset resources at the start of each level (independent of Level 1) ─
 func _grant_level_start_resources(level: int):
 	match level:
 		2:
-			currency += 500
-			gems     += 20
-			print("🎁 Level 2 bonus: +500 gold, +20 gems")
+			lives    = 20
+			currency = 500
+			gems     = 20
+			print("Level 2 reset: lives=20, gold=500, gems=20")
 		3:
-			currency += 400
-			gems     += 15
-			print("🎁 Level 3 bonus: +400 gold, +15 gems")
+			lives    = 20
+			currency = 1000
+			gems     = 50
+			print("Level 3 reset: lives=20, gold=1000, gems=50")
 		_:
-			# Level 4+: modest bonus that scales with level
-			currency += 200 + level * 50
-			gems     += 10
-			print("🎁 Level %d bonus: +%d gold, +10 gems" % [level, 200 + level * 50])
+			# Level 4+:
+			lives    = 20
+			currency = 600 + (level - 3) * 100
+			gems     = 25 + (level - 3) * 5
+			print("Level %d reset: lives=20, gold=%d, gems=%d" % [level, currency, gems])
 
 # ── Wave logic ───────────────────────────────────────────────────────────────
 func start_wave():

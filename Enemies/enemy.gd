@@ -113,8 +113,8 @@ func die():
 	# ── Calculate loot ──────────────────────────────────────────────────────
 	var gold_drop = randi_range(min_gold_drop, max_gold_drop)
 	var gem_drop  = 0
-	if randf() < 0.15:           # 15 % chance — gems are rare currency
-		gem_drop = randi_range(1, 2)
+	if randf() < 0.20:           # 20 % chance
+		gem_drop = randi_range(2, 8)
 
 	# Emit loot signal with world position (before queue_free!)
 	emit_signal("loot_dropped", global_position, gold_drop, gem_drop)

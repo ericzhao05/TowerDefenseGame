@@ -5,7 +5,7 @@ extends Control
 signal purchase_tower(tower_type, button)
 signal refresh_shop
 
-const REFRESH_COST = 3  # Gems needed to refresh
+const REFRESH_COST = 5  # Gems needed to refresh
 
 # Available tower types
 var available_towers = [
@@ -28,9 +28,11 @@ func _ready():
 	# First generation always shows one of each tower (tutorial-friendly)
 	generate_shop()
 	
-	# Connect refresh button
+	# Connect refresh button and sync its label to the actual cost constant
 	if refresh_button:
-		refresh_button.pressed.connect(_on_refresh_pressed)
+		refresh_button.text = "Refresh  ✦ x%d" % REFRESH_COST
+		if not refresh_button.pressed.is_connected(_on_refresh_pressed):
+			refresh_button.pressed.connect(_on_refresh_pressed)
 	
 	# Hide the "not enough money" label initially
 	if not_enough_money_label:

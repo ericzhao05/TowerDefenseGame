@@ -73,7 +73,7 @@ theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
 theme_override_constants/icon_max_width = 22
 theme_override_font_sizes/font_size = 18
-text = "Refresh        x5"
+text = "Refresh  ✦ x3"
 
 [node name="Item41_png" type="Sprite2D" parent="." unique_id=312227330]
 position = Vector2(977.99994, 238.00002)

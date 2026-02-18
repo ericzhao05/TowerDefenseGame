@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://blcoi7ih0qgwh"]
 
-[ext_resource type="Script" path="res://Scripts/lose_scene.gd" id="1_lose"]
+[ext_resource type="Script" uid="uid://7cqdu0vllurl" path="res://Scripts/lose_scene.gd" id="1_lose"]
 
-[node name="LoseScene" type="Node2D"]
+[node name="LoseScene" type="Node2D" unique_id=368585484]
+position = Vector2(-143, 49)
 script = ExtResource("1_lose")
