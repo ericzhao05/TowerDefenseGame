@@ -1,28 +1,129 @@
-[gd_scene load_steps=4 format=3 uid="uid://lbsxifq30os2"]
+[gd_scene format=3 uid="uid://lbsxifq30os2"]
 
 [ext_resource type="Script" uid="uid://cudxe0bkiwaqq" path="res://Enemies/enemy.gd" id="1_4isyn"]
-[ext_resource type="Texture2D" uid="uid://cmixx1nww238t" path="res://Sprites/Idle.png" id="2_4isyn"]
+[ext_resource type="Texture2D" uid="uid://by56lpmbqa4pm" path="res://Sprites/enemies/1/D_Death.png" id="2_wdetw"]
+[ext_resource type="Texture2D" uid="uid://dn7uo040klgv6" path="res://Sprites/enemies/1/D_Walk.png" id="3_jcwuj"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_px1sc"]
-size = Vector2(64, 64)
+size = Vector2(46.5, 48)
 
-[node name="Enemy" type="CharacterBody2D"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_biruh"]
+atlas = ExtResource("2_wdetw")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n1bor"]
+atlas = ExtResource("2_wdetw")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a5aut"]
+atlas = ExtResource("2_wdetw")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ikgc1"]
+atlas = ExtResource("2_wdetw")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_da7ms"]
+atlas = ExtResource("2_wdetw")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jio8c"]
+atlas = ExtResource("2_wdetw")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_un6pf"]
+atlas = ExtResource("3_jcwuj")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0hlsd"]
+atlas = ExtResource("3_jcwuj")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fn17s"]
+atlas = ExtResource("3_jcwuj")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n2n7y"]
+atlas = ExtResource("3_jcwuj")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_od5md"]
+atlas = ExtResource("3_jcwuj")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_de0ly"]
+atlas = ExtResource("3_jcwuj")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_lplnl"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_biruh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n1bor")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a5aut")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ikgc1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_da7ms")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jio8c")
+}],
+"loop": false,
+"name": &"Death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_un6pf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0hlsd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fn17s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n2n7y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_od5md")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_de0ly")
+}],
+"loop": true,
+"name": &"Walk",
+"speed": 8.0
+}]
+
+[node name="Enemy" type="CharacterBody2D" unique_id=444903067]
 script = ExtResource("1_4isyn")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(32, 32)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=648495284]
 shape = SubResource("RectangleShape2D_px1sc")
 
-[node name="HealthBar" type="ProgressBar" parent="."]
-offset_left = 32.0
-offset_top = -24.0
-offset_right = 36.0
-offset_bottom = 3.0
-show_percentage = false
+[node name="Timer" type="Timer" parent="." unique_id=632752076]
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(32, 32)
-scale = Vector2(1, 1.3333334)
-texture = ExtResource("2_4isyn")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1882691784]
+sprite_frames = SubResource("SpriteFrames_lplnl")
+animation = &"Death"
+autoplay = "Walk"
 
-[node name="Timer" type="Timer" parent="."]
+[node name="HealthLabel" type="Label" parent="." unique_id=-1266491677]
+offset_left = -16.0
+offset_top = -23.0
+offset_right = 16.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 16
+text = "10"
+horizontal_alignment = 1

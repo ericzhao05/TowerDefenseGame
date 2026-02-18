@@ -1,0 +1,125 @@
+[gd_scene format=3 uid="uid://c7y3m8yxkj5r"]
+
+[ext_resource type="PackedScene" uid="uid://lbsxifq30os2" path="res://Enemies/Enemy.tscn" id="1_tank"]
+[ext_resource type="Texture2D" uid="uid://c2uffdrcx6jte" path="res://Sprites/enemies/2/S_Death.png" id="2_667cm"]
+[ext_resource type="Texture2D" uid="uid://c3x5pcs35kg3o" path="res://Sprites/enemies/2/S_Walk.png" id="3_s35x2"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_667cm"]
+atlas = ExtResource("2_667cm")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s35x2"]
+atlas = ExtResource("2_667cm")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0egbg"]
+atlas = ExtResource("2_667cm")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_at433"]
+atlas = ExtResource("2_667cm")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_asptc"]
+atlas = ExtResource("2_667cm")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yv3q8"]
+atlas = ExtResource("2_667cm")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v2hux"]
+atlas = ExtResource("3_s35x2")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8uc4v"]
+atlas = ExtResource("3_s35x2")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_10j2j"]
+atlas = ExtResource("3_s35x2")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tjobv"]
+atlas = ExtResource("3_s35x2")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_omhgw"]
+atlas = ExtResource("3_s35x2")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hnxl4"]
+atlas = ExtResource("3_s35x2")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tank"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_667cm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s35x2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0egbg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_at433")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_asptc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yv3q8")
+}],
+"loop": false,
+"name": &"Death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v2hux")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8uc4v")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_10j2j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tjobv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omhgw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hnxl4")
+}],
+"loop": true,
+"name": &"Walk",
+"speed": 5.0
+}]
+
+[node name="TankEnemy" unique_id=1060864187 instance=ExtResource("1_tank")]
+speed = 50.0
+max_hp = 50
+worth = 20
+
+[node name="CollisionShape2D" parent="." index="0" unique_id=648495284]
+position = Vector2(0, 0)
+
+[node name="AnimatedSprite2D" parent="." index="3" unique_id=1882691784]
+flip_h = true
+modulate = Color(1, 0.7, 0.7, 1)
+sprite_frames = SubResource("SpriteFrames_tank")
+animation = &"Walk"
+
+[node name="HealthLabel" parent="." index="4" unique_id=-1266491677]
+offset_left = -15.0
+offset_top = -34.0
+offset_right = 17.0
+offset_bottom = -8.0
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "50"

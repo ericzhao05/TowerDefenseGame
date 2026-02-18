@@ -1,0 +1,149 @@
+[gd_scene format=3 uid="uid://t1h5qe0mswru" load_steps=20]
+
+[ext_resource type="Script" uid="uid://bftvuxbeo0yc5" path="res://Scripts/tower_aoe.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://3k2v67xqtwgt" path="res://Sprites/Tower/Wizard Pack/Attack1.png" id="2_atk"]
+[ext_resource type="Texture2D" uid="uid://dnd5tt5pd7til" path="res://Sprites/Tower/Wizard Pack/Idle.png" id="3_idle"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_r6vq3"]
+radius = 100.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fr1ya"]
+atlas = ExtResource("2_atk")
+region = Rect2(0, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pf1us"]
+atlas = ExtResource("2_atk")
+region = Rect2(231, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rcqtb"]
+atlas = ExtResource("2_atk")
+region = Rect2(462, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cpvv6"]
+atlas = ExtResource("2_atk")
+region = Rect2(1155, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_o6s73"]
+atlas = ExtResource("2_atk")
+region = Rect2(1386, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0lmdg"]
+atlas = ExtResource("2_atk")
+region = Rect2(1617, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6s70l"]
+atlas = ExtResource("2_atk")
+region = Rect2(924, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rdk20"]
+atlas = ExtResource("2_atk")
+region = Rect2(693, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_erdn0"]
+atlas = ExtResource("3_idle")
+region = Rect2(0, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_588ss"]
+atlas = ExtResource("3_idle")
+region = Rect2(231, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d85j7"]
+atlas = ExtResource("3_idle")
+region = Rect2(462, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wkj72"]
+atlas = ExtResource("3_idle")
+region = Rect2(693, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jvvty"]
+atlas = ExtResource("3_idle")
+region = Rect2(924, 0, 231, 190)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_60uej"]
+atlas = ExtResource("3_idle")
+region = Rect2(1155, 0, 231, 190)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1bfue"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fr1ya")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pf1us")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rcqtb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cpvv6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_o6s73")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0lmdg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6s70l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rdk20")
+}],
+"loop": true,
+"name": &"Attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_erdn0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_588ss")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d85j7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wkj72")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jvvty")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_60uej")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}]
+
+[node name="AOETower" type="Area2D" unique_id=2079996567]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="Range" type="CollisionShape2D" parent="." unique_id=1738809560]
+shape = SubResource("CircleShape2D_r6vq3")
+
+[node name="Attacktimer" type="Timer" parent="." unique_id=947776032]
+
+[node name="TowerLevel" type="Label" parent="." unique_id=2057454194]
+visible = false
+layout_mode = 0
+offset_left = -16.0
+offset_top = -180.0
+offset_right = 16.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 16
+text = "1"
+horizontal_alignment = 1
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1650860592]
+position = Vector2(5, -25)
+scale = Vector2(0.75, 0.75)
+sprite_frames = SubResource("SpriteFrames_1bfue")
+animation = &"Idle"
+autoplay = "Idle"

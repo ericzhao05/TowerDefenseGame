@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://c4vme8nalco4v"]
+
+[ext_resource type="Script" uid="uid://cnn3vcvkl6x6m" path="res://UI/tower_slot.gd" id="1_slot"]
+
+[node name="TowerSlot" type="Button" unique_id=1282024365]
+custom_minimum_size = Vector2(200, 140)
+offset_right = 200.0
+offset_bottom = 140.0
+flat = true
+script = ExtResource("1_slot")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=772276677]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="SpriteContainer" type="CenterContainer" parent="VBoxContainer" unique_id=203238816]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 64)
+size_flags_vertical = 0
+
+[node name="NameLabel" type="Label" parent="VBoxContainer" unique_id=1967997734]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.3, 0.2, 0.1, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 18
+text = "Tower Name"
+horizontal_alignment = 1
+
+[node name="CostLabel" type="Label" parent="VBoxContainer" unique_id=1504760487]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_colors/font_outline_color = Color(0.3, 0.2, 0.1, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "$50"
+horizontal_alignment = 1

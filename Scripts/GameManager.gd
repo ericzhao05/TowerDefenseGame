@@ -2,145 +2,178 @@
 extends Node2D
 
 signal currency_changed(new_amount)
+signal gems_changed(new_amount)
 signal wave_completed
+signal lives_changed(new_lives)
+signal game_over
+signal wave_ready(level_num, wave_num, total_waves)   # Shown to player before each wave
 
 var currency: int = 300 :
 	set(value):
 		currency = value
 		emit_signal("currency_changed", currency)
 
+var gems: int = 10 :
+	set(value):
+		gems = value
+		emit_signal("gems_changed", gems)
+
+var lives: int = 20 :
+	set(value):
+		lives = value
+		emit_signal("lives_changed", lives)
+		if lives <= 0:
+			emit_signal("game_over")
+
+var current_level: int = 1
 var current_wave: int = 0
+var total_waves: int = 4          # Waves per level
 var enemies_alive: int = 0
 var wave_in_progress: bool = false
 
-@onready var grid_manager = $GridManager
-@onready var path = $Path2D
-@onready var enemy_spawner = $EnemySpawner
+var path
 @onready var ui = $UI
 
 func _ready():
 	randomize()
-	if ui and ui.has_node("TowerShop"):
-		ui.get_node("TowerShop").purchase_tower.connect(_on_purchase_tower)
-	
-	start_wave()
+	print("🎮 GameManager starting...")
 
-func _on_purchase_tower(tower_type: String):
-	# Tell grid manager to start drag mode
-	if grid_manager:
-		grid_manager.start_drag(tower_type)	
+	var level = get_parent().get_node_or_null("Level1")
+	if level:
+		path = level.get_node_or_null("Path2D")
+		print("Found Level1 and Path2D")
 	else:
-		print("ERROR: grid_manager not found!")
+		push_error("ERROR: Level1 not found!")
+		return
+
+	# Wait a frame for UI to be ready, then show the Start button
+	await get_tree().process_frame
+	_notify_wave_ready()
+
+# ── Called by UI when the player presses the Start button ───────────────────
+func start_wave_requested():
+	start_wave()
 
 func start_wave():
 	if wave_in_progress:
 		return
-	
 	wave_in_progress = true
 	current_wave += 1
 	spawn_wave(current_wave)
 
-# Scripts/game_manager.gd - Fixed spawn_wave
+# ── Wave spawning ─────────────────────────────────────────────────────────────
+func spawn_wave(wave_number: int):
+	print("📦 Spawning Level %d Wave %d" % [current_level, wave_number])
 
-func spawn_wave(wave_number):
-	# Safety check
-	if not path or not path.curve or path.curve.get_point_count() == 0:
-		push_error("Path has no points! Cannot spawn enemies.")
+	if not path:
+		push_error("Path not found!")
 		return
-	
-	var enemy_count = 5 + wave_number * 2
-	enemies_alive = enemy_count
-	
-	for i in range(enemy_count):
-		var enemy = create_enemy(wave_number)
-		
+	if not path.curve or path.curve.get_point_count() == 0:
+		push_error("Path has no points!")
+		return
+
+	var wave_config = get_wave_config(current_level, wave_number)
+	enemies_alive = wave_config.size()
+	print("   Spawning", enemies_alive, "enemies:", wave_config)
+
+	for i in range(wave_config.size()):
+		var enemy_type = wave_config[i]
+		var enemy = create_specific_enemy(enemy_type, wave_number)
+		if not enemy:
+			push_error("Failed to create enemy!")
+			continue
+
 		enemy.enemy_died.connect(_on_enemy_died)
 		enemy.enemy_reached_end.connect(_on_enemy_reached_end)
-		
-		# Create a PathFollow2D to control the enemy's position
+
 		var path_follow = PathFollow2D.new()
 		path_follow.name = "PathFollow_" + str(i)
 		path_follow.rotates = false
 		path_follow.loop = false
-		
-		# Add the enemy as a child of PathFollow2D
 		path_follow.add_child(enemy)
-		
-		# Add the PathFollow2D to the Path2D
 		path.add_child(path_follow)
-		
-		# Set the enemy's path_follow reference
 		enemy.path_follow = path_follow
-		
-		# Position at start of path
 		path_follow.progress = 0
-		
-		# Stagger spawn times
-		await get_tree().create_timer(0.5).timeout
 
-# In GameManager.gd - Fixed create_enemy function
+		print("   ✓ Spawned", enemy_type, "enemy", i + 1, "/", enemies_alive)
 
-func create_enemy(wave_number):
-	var enemy = CharacterBody2D.new()
-	enemy.name = "Enemy"
-	
-	# Add the script
-	var enemy_script = preload("res://Enemies/Enemy.gd")
-	enemy.set_script(enemy_script)
-	
-	# Add collision shape
-	var collision = CollisionShape2D.new()
-	var shape = RectangleShape2D.new()
-	shape.extents = Vector2(16, 16)
-	collision.shape = shape
-	enemy.add_child(collision)
-	
-	# Add sprite
-	var sprite = Sprite2D.new()
-	sprite.name = "Sprite2D"
-	var icon = preload("res://icon.svg")
-	sprite.texture = icon
-	sprite.scale = Vector2(0.5, 0.5)
-	enemy.add_child(sprite)
-	
-	# Add health bar - FIXED VERSION
-	var health_bar = ProgressBar.new()
-	health_bar.name = "HealthBar"
-	health_bar.size = Vector2(40, 5)
-	health_bar.position = Vector2(-20, -30)
-	health_bar.show_percentage = false
-	
-	# In Godot 4, we need to use Theme Overrides to set colors
-	var theme = Theme.new()
-	var stylebox = StyleBoxFlat.new()
-	stylebox.bg_color = Color(0.2, 0.2, 0.2)  # Background color
-	health_bar.add_theme_stylebox_override("fill", stylebox)  # Fill color
-	
-	# Or alternatively, use this simpler approach:
-	health_bar.modulate = Color.WHITE  # The bar will use default theme
-	
-	enemy.add_child(health_bar)
-	
-	# Initialize
+		var spawn_delay = 0.5
+		if current_level == 1 and wave_number == 2:
+			spawn_delay = 0.2   # Wave 2: tight cluster
+		await get_tree().create_timer(spawn_delay).timeout
+
+	print("Level %d Wave %d fully spawned!" % [current_level, wave_number])
+
+# ── Wave / level configs ──────────────────────────────────────────────────────
+func get_wave_config(level: int, wave: int) -> Array:
+	match level:
+		1: return get_level1_wave_config(wave)
+		2: return get_level2_wave_config(wave)
+		_: return get_level2_wave_config(wave)  # Level 2+ pattern continues
+
+func get_level1_wave_config(wave: int) -> Array:
+	match wave:
+		1: return ["regular", "regular"]
+		2: return ["regular", "regular", "regular", "regular", "regular"]
+		3: return ["fast"]
+		4: return ["tank"]
+		_: return ["regular"]
+
+func get_level2_wave_config(wave: int) -> Array:
+	match wave:
+		1: return ["regular", "regular", "fast"]
+		2: return ["fast", "fast", "regular", "regular"]
+		3: return ["tank", "fast", "fast"]
+		4: return ["tank", "tank", "fast", "fast", "regular"]
+		_: return ["tank", "fast", "regular"]
+
+# ── Enemy factories ───────────────────────────────────────────────────────────
+var regular_enemy_scene = preload("res://Enemies/Enemy.tscn")
+var fast_enemy_scene    = preload("res://Enemies/FastEnemy.tscn")
+var tank_enemy_scene    = preload("res://Enemies/TankEnemy.tscn")
+
+func create_specific_enemy(enemy_type: String, wave_number: int):
+	var enemy
+	match enemy_type:
+		"regular": enemy = regular_enemy_scene.instantiate()
+		"fast":    enemy = fast_enemy_scene.instantiate()
+		"tank":    enemy = tank_enemy_scene.instantiate()
+		_:
+			push_error("Unknown enemy type: " + enemy_type)
+			enemy = regular_enemy_scene.instantiate()
 	enemy.initialize(wave_number)
-	
 	return enemy
 
+# ── Enemy event handlers ──────────────────────────────────────────────────────
 func _on_enemy_died(worth):
-	currency += worth  # This will trigger the setter and signal
+	currency += worth
 	enemies_alive -= 1
 	check_wave_complete()
 
 func _on_enemy_reached_end():
-	# Penalty for letting enemies through
-	currency = max(0, currency - 10)  # This will trigger the setter
+	lives -= 1
 	enemies_alive -= 1
 	check_wave_complete()
 
 func check_wave_complete():
-	if enemies_alive <= 0:
-		wave_in_progress = false
-		emit_signal("wave_completed")
-		# Auto-start next wave after delay - using await
-		await get_tree().create_timer(3.0).timeout
-		start_wave()
+	if enemies_alive > 0:
+		return
+
+	wave_in_progress = false
+	emit_signal("wave_completed")
+
+	if current_wave >= total_waves:
+		# ── All waves in this level done — advance to next level
+		print("✅ Level %d complete!" % current_level)
+		await get_tree().create_timer(2.0).timeout
+		current_level += 1
+		current_wave = 0
+		print("➡️  Starting Level %d..." % current_level)
+		_notify_wave_ready()
+	else:
+		# ── More waves remain — show Start button again
+		await get_tree().create_timer(1.5).timeout
+		_notify_wave_ready()
+
+func _notify_wave_ready():
+	emit_signal("wave_ready", current_level, current_wave + 1, total_waves)

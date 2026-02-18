@@ -1,13 +1,133 @@
-[gd_scene load_steps=2 format=3 uid="uid://dqg6na2smklb2"]
+[gd_scene format=3 uid="uid://dqg6na2smklb2"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_wcai7"]
-radius = 150.0
+[ext_resource type="Script" path="res://Scripts/tower_base.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://ceoyi3xfom1ne" path="res://Sprites/Tower/Medieval King Pack 2/Sprites/Attack3.png" id="1_f7tkj"]
+[ext_resource type="Texture2D" uid="uid://xydw0jjflcri" path="res://Sprites/Tower/Medieval King Pack 2/Sprites/Idle.png" id="2_axic5"]
 
-[node name="TowerBase" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wcai7"]
+size = Vector2(80, 50)
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[sub_resource type="AtlasTexture" id="AtlasTexture_3yp4w"]
+atlas = ExtResource("1_f7tkj")
+region = Rect2(0, 0, 160, 111)
 
-[node name="Range" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_wcai7")
+[sub_resource type="AtlasTexture" id="AtlasTexture_4rvfx"]
+atlas = ExtResource("1_f7tkj")
+region = Rect2(160, 0, 160, 111)
 
-[node name="Attacktimer" type="Timer" parent="."]
+[sub_resource type="AtlasTexture" id="AtlasTexture_gnv5v"]
+atlas = ExtResource("1_f7tkj")
+region = Rect2(320, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_inbwe"]
+atlas = ExtResource("1_f7tkj")
+region = Rect2(480, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rn0qq"]
+atlas = ExtResource("2_axic5")
+region = Rect2(0, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_q77vp"]
+atlas = ExtResource("2_axic5")
+region = Rect2(160, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1ijmy"]
+atlas = ExtResource("2_axic5")
+region = Rect2(320, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_thvnm"]
+atlas = ExtResource("2_axic5")
+region = Rect2(480, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hibgr"]
+atlas = ExtResource("2_axic5")
+region = Rect2(800, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2x5gf"]
+atlas = ExtResource("2_axic5")
+region = Rect2(640, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mlmol"]
+atlas = ExtResource("2_axic5")
+region = Rect2(960, 0, 160, 111)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k265x"]
+atlas = ExtResource("2_axic5")
+region = Rect2(1120, 0, 160, 111)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rn0qq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3yp4w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4rvfx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gnv5v")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_inbwe")
+}],
+"loop": true,
+"name": &"Attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rn0qq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_q77vp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1ijmy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_thvnm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hibgr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2x5gf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mlmol")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k265x")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}]
+
+[node name="TowerBase" type="Area2D" unique_id=621583888]
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="Range" type="CollisionShape2D" parent="." unique_id=637242767]
+position = Vector2(40, 0)
+shape = SubResource("RectangleShape2D_wcai7")
+
+[node name="Attacktimer" type="Timer" parent="." unique_id=1970513243]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=673077975]
+position = Vector2(0, -50)
+sprite_frames = SubResource("SpriteFrames_rn0qq")
+animation = &"Idle"
+autoplay = "Idle"
+
+[node name="TowerLevel" type="Label" parent="." unique_id=1697647769]
+visible = false
+offset_left = -16.0
+offset_top = -23.0
+offset_right = 16.0
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 16
+text = "5"
+horizontal_alignment = 1

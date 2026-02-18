@@ -1,31 +1,83 @@
-[gd_scene load_steps=6 format=3 uid="uid://dkv17kv8rtfh4"]
+[gd_scene format=3 uid="uid://dkv17kv8rtfh4"]
 
 [ext_resource type="Script" uid="uid://n41e5qq83pkt" path="res://Scripts/tower_slow.gd" id="1_by8hh"]
-[ext_resource type="Texture2D" uid="uid://cdvnweesn8dpd" path="res://Sprites/Baby Chicken Yellow.png" id="2_vf5l6"]
+[ext_resource type="Texture2D" uid="uid://g2f03aw6pfij" path="res://Sprites/floor/3 Animated Objects/1 Flag/2.png" id="2_by8hh"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_i7oyj"]
 radius = 120.0
 
-[sub_resource type="Gradient" id="Gradient_u8fle"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_vf5l6"]
+atlas = ExtResource("2_by8hh")
+region = Rect2(0, 0, 32, 64)
 
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_citq8"]
-gradient = SubResource("Gradient_u8fle")
+[sub_resource type="AtlasTexture" id="AtlasTexture_i7oyj"]
+atlas = ExtResource("2_by8hh")
+region = Rect2(32, 0, 32, 64)
 
-[node name="SlowTower" type="Area2D"]
-collision_mask = 2
+[sub_resource type="AtlasTexture" id="AtlasTexture_u8fle"]
+atlas = ExtResource("2_by8hh")
+region = Rect2(64, 0, 32, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_citq8"]
+atlas = ExtResource("2_by8hh")
+region = Rect2(96, 0, 32, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r6o6y"]
+atlas = ExtResource("2_by8hh")
+region = Rect2(128, 0, 32, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eqmgw"]
+atlas = ExtResource("2_by8hh")
+region = Rect2(160, 0, 32, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_0egj3"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vf5l6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i7oyj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u8fle")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_citq8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r6o6y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eqmgw")
+}],
+"loop": true,
+"name": &"Attack",
+"speed": 5.0
+}]
+
+[node name="SlowTower" type="Area2D" unique_id=1969331543]
+collision_mask = 1
 script = ExtResource("1_by8hh")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_vf5l6")
-
-[node name="Range" type="CollisionShape2D" parent="."]
+[node name="Range" type="CollisionShape2D" parent="." unique_id=1174385781]
 shape = SubResource("CircleShape2D_i7oyj")
 
-[node name="AttackTimer" type="Timer" parent="."]
-wait_time = 2.0
 
-[node name="UpgradeAnimation" type="AnimationPlayer" parent="."]
-root_node = NodePath("../AttackTimer")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=558464582]
+position = Vector2(0, -32)
+sprite_frames = SubResource("SpriteFrames_0egj3")
+animation = &"Attack"
+autoplay = "Attack"
 
-[node name="Aura" type="Sprite2D" parent="."]
-texture = SubResource("GradientTexture2D_citq8")
+[node name="TowerLevel" type="Label" parent="." unique_id=1244009284]
+visible = false
+offset_left = -16.0
+offset_top = -23.0
+offset_right = 16.0
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 16
+text = "5"
+horizontal_alignment = 1

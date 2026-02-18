@@ -1,0 +1,118 @@
+[gd_scene format=3 uid="uid://bq6n2m8yxkj5r"]
+
+[ext_resource type="PackedScene" uid="uid://lbsxifq30os2" path="res://Enemies/Enemy.tscn" id="1_fast"]
+[ext_resource type="Texture2D" uid="uid://bopnwnilp4ira" path="res://Sprites/enemies/3/S_Death.png" id="2_vmw1j"]
+[ext_resource type="Texture2D" uid="uid://tfjvt7xj5wov" path="res://Sprites/enemies/3/S_Walk.png" id="3_xuvi5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vmw1j"]
+atlas = ExtResource("2_vmw1j")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xuvi5"]
+atlas = ExtResource("2_vmw1j")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eoctk"]
+atlas = ExtResource("2_vmw1j")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t8lst"]
+atlas = ExtResource("2_vmw1j")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tkq3r"]
+atlas = ExtResource("2_vmw1j")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ynhjk"]
+atlas = ExtResource("2_vmw1j")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yyed3"]
+atlas = ExtResource("3_xuvi5")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_wfqug"]
+atlas = ExtResource("3_xuvi5")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cwarv"]
+atlas = ExtResource("3_xuvi5")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2r70l"]
+atlas = ExtResource("3_xuvi5")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oe8no"]
+atlas = ExtResource("3_xuvi5")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0tmur"]
+atlas = ExtResource("3_xuvi5")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fast"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vmw1j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xuvi5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eoctk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t8lst")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tkq3r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ynhjk")
+}],
+"loop": false,
+"name": &"Death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yyed3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_wfqug")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cwarv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2r70l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oe8no")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0tmur")
+}],
+"loop": true,
+"name": &"Walk",
+"speed": 5.0
+}]
+
+[node name="FastEnemy" unique_id=758739212 instance=ExtResource("1_fast")]
+speed = 200.0
+max_hp = 5
+worth = 5
+
+[node name="CollisionShape2D" parent="." index="0" unique_id=648495284]
+position = Vector2(0.75, 0)
+
+[node name="AnimatedSprite2D" parent="." index="2" unique_id=1882691784]
+flip_h = true
+sprite_frames = SubResource("SpriteFrames_fast")
+
+[node name="HealthLabel" parent="." index="3" unique_id=-1266491677]
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+text = "5"

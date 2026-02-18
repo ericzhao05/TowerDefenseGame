@@ -1,116 +1,122 @@
-[gd_scene load_steps=11 format=3 uid="uid://br62pn2xq4lod"]
+[gd_scene format=3 uid="uid://br62pn2xq4lod"]
 
 [ext_resource type="Script" uid="uid://dtbrcmfjsku7o" path="res://Scripts/GameManager.gd" id="1_j5yw3"]
-[ext_resource type="PackedScene" uid="uid://dcl768gtkchcy" path="res://UI/TowerButton.tscn" id="2_gl6un"]
-[ext_resource type="Script" uid="uid://c3usiywwi8hym" path="res://Scenes/Grid/GridManager.gd" id="2_kldst"]
-[ext_resource type="Script" uid="uid://j4sedgom4a24" path="res://UI/game_ui.gd" id="3_b2bpf"]
-[ext_resource type="Script" uid="uid://cs1gr8w0gpljg" path="res://UI/tower_info.gd" id="5_7lihs"]
+[ext_resource type="PackedScene" uid="uid://dcl768gtkchcy" path="res://UI/TowerShop.tscn" id="2_tower"]
+[ext_resource type="Script" uid="uid://b0jkmyd212nuf" path="res://UI/game_ui.gd" id="3_b2bpf"]
+[ext_resource type="PackedScene" uid="uid://cfehaij52rv3d" path="res://Scenes/Levels/level_1.tscn" id="6_level1"]
 
-[sub_resource type="Gradient" id="Gradient_j5yw3"]
+[node name="Main" type="Node2D" unique_id=693202688]
 
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_kldst"]
-gradient = SubResource("Gradient_j5yw3")
+[node name="GameBackground" type="CanvasLayer" parent="." unique_id=2130161548]
+layer = -100
 
-[sub_resource type="BoxMesh" id="BoxMesh_b2bpf"]
+[node name="ColorRect" type="ColorRect" parent="GameBackground" unique_id=1160791977]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.4, 0.6, 0.3, 1)
 
-[sub_resource type="MeshTexture" id="MeshTexture_7lihs"]
-mesh = SubResource("BoxMesh_b2bpf")
+[node name="Level1" parent="." unique_id=449945131 instance=ExtResource("6_level1")]
 
-[sub_resource type="Curve2D" id="Curve2D_j5yw3"]
-_data = {
-"points": PackedVector2Array(0, 0, 0, 0, 32, 24, 0, 0, 0, 0, 96, 32, 0, 0, 0, 0, 96, 96, 0, 0, 0, 0, 104, 152, 0, 0, 0, 0, 168, 160, 0, 0, 0, 0, 232, 160, 0, 0, 0, 0, 288, 160, 0, 0, 0, 0, 352, 152)
-}
-point_count = 8
-
-[node name="Main" type="Node2D"]
-
-[node name="GameManager" type="Node2D" parent="."]
+[node name="GameManager" type="Node2D" parent="." unique_id=588879921]
 script = ExtResource("1_j5yw3")
 
-[node name="GridManager" type="Node2D" parent="GameManager"]
-script = ExtResource("2_kldst")
-
-[node name="UI" type="CanvasLayer" parent="GameManager"]
+[node name="UI" type="CanvasLayer" parent="GameManager" unique_id=674492340]
 script = ExtResource("3_b2bpf")
 
-[node name="TopBar" type="Panel" parent="GameManager/UI"]
-offset_right = 40.0
-offset_bottom = 40.0
+[node name="TopBar" type="Panel" parent="GameManager/UI" unique_id=1944156272]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_bottom = 120.0
+grow_horizontal = 0
 
-[node name="CurrencyIcon" type="TextureRect" parent="GameManager/UI/TopBar"]
+[node name="CurrencyLabel" type="Label" parent="GameManager/UI/TopBar" unique_id=1415205712]
 layout_mode = 0
-offset_left = 10.0
+offset_left = 20.0
 offset_top = 10.0
-offset_right = 42.0
-offset_bottom = 42.0
-texture = SubResource("GradientTexture1D_kldst")
+offset_right = 280.0
+offset_bottom = 35.0
+theme_override_colors/font_color = Color(1, 0.847059, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+text = "Gold: $300"
+horizontal_alignment = 2
 
-[node name="CurrencyLabel" type="Label" parent="GameManager/UI/TopBar"]
+[node name="WaveLabel" type="Label" parent="GameManager/UI/TopBar" unique_id=2101350596]
 layout_mode = 0
-offset_left = 50.0
-offset_top = 10.0
-offset_right = 90.0
-offset_bottom = 33.0
-text = "$300"
+offset_left = 20.0
+offset_top = 40.0
+offset_right = 280.0
+offset_bottom = 65.0
+theme_override_colors/font_color = Color(0.529412, 0.807843, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+text = "Wave: 1"
+horizontal_alignment = 2
 
-[node name="WaveIcon" type="TextureRect" parent="GameManager/UI/TopBar"]
+[node name="LivesLabel" type="Label" parent="GameManager/UI/TopBar" unique_id=472699789]
 layout_mode = 0
-offset_left = 200.0
-offset_top = 10.0
-offset_right = 232.0
-offset_bottom = 42.0
-texture = SubResource("MeshTexture_7lihs")
+offset_left = 20.0
+offset_top = 70.0
+offset_right = 280.0
+offset_bottom = 95.0
+theme_override_colors/font_color = Color(1, 0.333333, 0.333333, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+text = "Lives: 20"
+horizontal_alignment = 2
 
-[node name="WaveLabel" type="Label" parent="GameManager/UI/TopBar"]
+[node name="GemsLabel" type="Label" parent="GameManager/UI/TopBar" unique_id=790231632]
 layout_mode = 0
-offset_left = 300.0
-offset_top = 10.0
-offset_right = 356.0
-offset_bottom = 33.0
-text = "Wave 1"
+offset_left = 20.0
+offset_top = 100.0
+offset_right = 280.0
+offset_bottom = 125.0
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+text = "Gems: 10"
+horizontal_alignment = 2
 
-[node name="TowerShop" parent="GameManager/UI" instance=ExtResource("2_gl6un")]
-offset_left = 448.0
-offset_right = -480.0
+[node name="TowerShop" parent="GameManager/UI" unique_id=1554464940 instance=ExtResource("2_tower")]
+offset_top = -302.0
+offset_bottom = -1.0
 
-[node name="TowerInfo" type="Panel" parent="GameManager/UI"]
+[node name="StartButton" type="Button" parent="GameManager/UI" unique_id=312847653]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -30.0
+offset_right = 120.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.1, 0.05, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 20
+text = "▶  Start Wave 1/4"
 visible = false
-offset_right = 40.0
-offset_bottom = 40.0
-script = ExtResource("5_7lihs")
-
-[node name="TowerNameLabel" type="Label" parent="GameManager/UI/TowerInfo"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-
-[node name="TowerLevelLabel" type="Label" parent="GameManager/UI/TowerInfo"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-
-[node name="UpgradeButton" type="Button" parent="GameManager/UI/TowerInfo"]
-layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
-
-[node name="UpgradeCostLabel" type="Label" parent="GameManager/UI/TowerInfo"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-
-[node name="SellButton" type="Button" parent="GameManager/UI/TowerInfo"]
-layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
-
-[node name="Path2D" type="Path2D" parent="GameManager"]
-curve = SubResource("Curve2D_j5yw3")
-
-[node name="EnemySpawner" type="Node2D" parent="GameManager"]
-
-[node name="VisualElements" type="Node" parent="."]
-
-[node name="GameElements" type="Node2D" parent="."]
-
-[node name="Towers" type="Node2D" parent="."]
