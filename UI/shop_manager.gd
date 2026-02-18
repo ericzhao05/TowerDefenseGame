@@ -5,16 +5,17 @@ extends Control
 signal purchase_tower(tower_type, button)
 signal refresh_shop
 
-const REFRESH_COST = 5  # Gems needed to refresh
+const REFRESH_COST = 3  # Gems needed to refresh
 
 # Available tower types
 var available_towers = [
-	{"type": "TowerBase", "cost": 50, "name": "Base Tower"},
-	{"type": "SlowTower", "cost": 75, "name": "Slow Tower"},
-	{"type": "aoe_tower", "cost": 125, "name": "AOE Tower"}
+	{"type": "TowerBase", "cost": 50,  "name": "Base Tower"},
+	{"type": "SlowTower", "cost": 75,  "name": "Slow Tower"},
+	{"type": "aoe_tower", "cost": 100, "name": "AOE Tower"}
 ]
 
 var current_shop_towers = []  # Current 3 towers in shop
+var is_first_generation: bool = true   # First gen is always one of each type
 
 @onready var button_container = $ButtonContainer
 @onready var not_enough_money_label = $NotEnoughMoneyLabel
@@ -24,7 +25,7 @@ var game_manager = null
 func _ready():
 	game_manager = get_node("/root/Main/GameManager")
 	
-	# Generate initial shop
+	# First generation always shows one of each tower (tutorial-friendly)
 	generate_shop()
 	
 	# Connect refresh button
@@ -42,20 +43,26 @@ func generate_shop():
 	
 	current_shop_towers.clear()
 	
-	# Stall positions calculated from ShopBackground at (431, 250) with scale (0.56, 0.44)
-	# Image is 1536x1024. Stall centers in image: x=310, 768, 1226
-	# Screen x = 431 + (img_x - 768) * 0.56 → 175, 431, 688
-	# Slot is 200x140, so top-left = center - (100, 70)
+	# Stall positions
 	var stall_positions = [
 		Vector2(75, 130),    # Left stall (ORANGE awning)
 		Vector2(331, 130),   # Middle stall (BROWN awning)
 		Vector2(588, 130)    # Right stall (BLUE awning)
 	]
 	
-	# Generate 3 random towers
+	# First generation: always one of each tower type (Base, Slow, AOE)
+	# Subsequent generations (after refresh): random
+	var towers_to_show: Array = []
+	if is_first_generation:
+		is_first_generation = false
+		towers_to_show = available_towers.duplicate()   # Exactly [Base, Slow, AOE]
+	else:
+		for _i in range(3):
+			towers_to_show.append(available_towers[randi() % available_towers.size()].duplicate())
+	
 	for i in range(3):
-		var random_tower = available_towers[randi() % available_towers.size()].duplicate()
-		current_shop_towers.append(random_tower)
+		var tower_data = towers_to_show[i].duplicate()
+		current_shop_towers.append(tower_data)
 		
 		var slot = preload("res://UI/TowerSlot.tscn").instantiate()
 		button_container.add_child(slot)
@@ -63,7 +70,7 @@ func generate_shop():
 		# Position manually
 		slot.position = stall_positions[i]
 		
-		slot.setup(random_tower.type, random_tower.cost, random_tower.name)
+		slot.setup(tower_data.type, tower_data.cost, tower_data.name)
 		slot.tower_slot_clicked.connect(_on_tower_slot_clicked.bind(slot))
 
 func _on_tower_slot_clicked(tower_type: String, cost: int, slot: Button):

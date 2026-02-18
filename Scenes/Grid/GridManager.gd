@@ -4,255 +4,520 @@ extends Node2D
 signal tower_placed(tower_type, grid_pos)
 signal tower_selected(tower)
 
-const GRID_SIZE = 32  # Match your tile size!
-const GRID_WIDTH = 40  # Adjust based on your map size
-const GRID_HEIGHT = 32  # Adjust based on your map size
+const GRID_SIZE   = 32
+const GRID_WIDTH  = 40
+const GRID_HEIGHT = 32
 
-var placed_towers = {}
+# placed_towers: cell_key (String) → { "tower": Node2D, "type": String }
+var placed_towers: Dictionary = {}
+
+# ── Shop-drag state ────────────────────────────────────────────────────────────
 var current_drag_tower = null
-var drag_tower_type = null
-var drag_active = false
+var drag_tower_type: String = ""
+var drag_active: bool = false
+var merge_mode: bool = false      # True when a same-type tower already exists on the field
+
+# ── Click-to-merge state ───────────────────────────────────────────────────────
+var tower_selected_mode: bool = false
+var selected_tower_cell: Vector2i = Vector2i(-9999, -9999)
+var selected_tower_type: String = ""
+
 var grid_overlay: Node2D = null
 
 @onready var game_manager = get_node("/root/Main/GameManager")
 @onready var tilemap: TileMap = get_parent().get_node_or_null("Map")
 
 func _ready():
-	# Create grid overlay for visual feedback
 	grid_overlay = Node2D.new()
 	grid_overlay.name = "GridOverlay"
-	grid_overlay.z_index = 100  # Draw on top
+	grid_overlay.z_index = 100
 	grid_overlay.visible = false
 	add_child(grid_overlay)
-	print("GridManager ready with TileMap integration")
-	
-func _process(delta):
+	print("GridManager ready")
+
+func _process(_delta):
 	if drag_active and current_drag_tower:
-		# Update drag tower position to follow mouse
-		var mouse_pos = get_global_mouse_position()
-		update_drag_position(mouse_pos)
-		
-		# Update grid overlay
+		update_drag_position(get_global_mouse_position())
+		grid_overlay.queue_redraw()
+	elif tower_selected_mode:
 		grid_overlay.queue_redraw()
 
-func start_drag(tower_type):
-	# Check if player has enough money first
+# ──────────────────────────────────────────────────────────────────────────────
+#  DRAG FROM SHOP
+# ──────────────────────────────────────────────────────────────────────────────
+
+func start_drag(tower_type: String):
 	var tower_cost = get_tower_cost(tower_type)
 	if game_manager and game_manager.currency < tower_cost:
-		print("Not enough money! Need $" + str(tower_cost) + ", have $" + str(game_manager.currency))
+		print("Not enough money! Need $%d, have $%d" % [tower_cost, game_manager.currency])
 		return
-	
+
 	if drag_active:
 		stop_drag()
-	
+
 	drag_tower_type = tower_type
 	drag_active = true
-	
-	# Create ghost tower
+
+	# Merge mode: does the field already contain a SAME-TYPE, LEVEL-1 tower?
+	# (Shop towers always start at level 1, so only level-1 field towers can be merged.)
+	merge_mode = false
+	for key in placed_towers:
+		var td = placed_towers[key]
+		if td["type"] == tower_type and _get_tower_level(td["tower"]) == 1:
+			merge_mode = true
+			break
+
+	if merge_mode:
+		_highlight_towers_for_merge(tower_type, 1)  # level 1 = shop drag always
+
+	# Ghost tower (transparent preview that follows the cursor)
 	var tower_path = "res://Towers/" + tower_type + ".tscn"
 	current_drag_tower = load(tower_path).instantiate()
 	current_drag_tower.modulate = Color(1, 1, 1, 0.6)
-	current_drag_tower.process_mode = PROCESS_MODE_DISABLED  # Disable tower logic while dragging
-	
-	# Hide health labels on ghost tower
-	var health_label = current_drag_tower.get_node_or_null("TowerLevel")
-	if health_label:
-		health_label.visible = false
-	
-	add_child(current_drag_tower)
-	
-	# Show grid overlay
-	grid_overlay.visible = true
-	setup_grid_overlay_drawing()
-	
-	# Change cursor
-	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
-	print("Started dragging:", tower_type)
+	current_drag_tower.process_mode = PROCESS_MODE_DISABLED
+	var ghost_label = current_drag_tower.get_node_or_null("TowerLevel")
+	if ghost_label:
+		ghost_label.visible = false
 
-func setup_grid_overlay_drawing():
-	# Connect draw function to grid overlay
+	add_child(current_drag_tower)
+	grid_overlay.visible = true
+	_setup_grid_overlay_drawing()
+	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+	print("Started dragging: %s  merge_mode=%s" % [tower_type, str(merge_mode)])
+
+# Returns the current level of a tower node (defaults to 1 if the property doesn't exist)
+func _get_tower_level(tower_node) -> int:
+	if is_instance_valid(tower_node) and "level" in tower_node:
+		return tower_node.level
+	return 1
+
+func _setup_grid_overlay_drawing():
 	if not grid_overlay.draw.is_connected(_draw_grid):
 		grid_overlay.draw.connect(_draw_grid)
 
 func _draw_grid():
-	if not drag_active or not current_drag_tower:
+	# Active during shop-drag OR click-to-merge
+	if not tilemap:
 		return
-	
-	var mouse_pos = get_global_mouse_position()
-	var tile_pos = tilemap.local_to_map(mouse_pos)
-	
-	# Draw grid in visible area around mouse
-	var grid_radius = 15  # How many tiles to show around mouse
-	for x in range(tile_pos.x - grid_radius, tile_pos.x + grid_radius):
-		for y in range(tile_pos.y - grid_radius, tile_pos.y + grid_radius):
-			var cell_pos = Vector2i(x, y)
-			var world_pos = tilemap.map_to_local(cell_pos)
-			
-			# Check if this tile is buildable
-			var is_buildable = check_tile_buildable(cell_pos)
-			var has_tower = is_cell_occupied(cell_pos)
-			
-			var color = Color.GREEN
-			if has_tower:
-				color = Color.RED
-			elif not is_buildable:
-				color = Color.ORANGE
-			
-			# Highlight the tile under mouse cursor
-			if cell_pos == tile_pos:
-				color.a = 0.5
-				# Draw filled rect for current tile
-				var rect_pos = world_pos - Vector2(GRID_SIZE/2, GRID_SIZE/2)
-				grid_overlay.draw_rect(Rect2(rect_pos, Vector2(GRID_SIZE, GRID_SIZE)), color)
-			else:
-				color.a = 0.2
-			
-			# Draw grid lines
-			var rect_pos = world_pos - Vector2(GRID_SIZE/2, GRID_SIZE/2)
-			grid_overlay.draw_rect(Rect2(rect_pos, Vector2(GRID_SIZE, GRID_SIZE)), color, false, 1.0)
+	if not drag_active and not tower_selected_mode:
+		return
 
-func update_drag_position(world_pos):
-	if current_drag_tower:
-		var snapped_pos = snap_to_grid(world_pos)
-		current_drag_tower.position = snapped_pos
-		
-		# Update tower color based on validity
-		var tile_pos = tilemap.local_to_map(world_pos)
-		var is_buildable = check_tile_buildable(tile_pos)
-		var has_tower = is_cell_occupied(tile_pos)
-		
-		if has_tower or not is_buildable:
-			current_drag_tower.modulate = Color(1, 0.3, 0.3, 0.6)  # Red = invalid
+	var hover_tile  = tilemap.local_to_map(get_global_mouse_position())
+	var layer_count = tilemap.get_layers_count()
+
+	# Collect every unique cell position that has a tile on ANY layer
+	var all_cells: Dictionary = {}
+	for layer in range(layer_count):
+		for cell in tilemap.get_used_cells(layer):
+			all_cells[cell] = true
+
+	# Pre-compute selected tower level for click-to-merge mode
+	var sel_level: int = 1
+	if tower_selected_mode:
+		var sel_ck = _cell_key(selected_tower_cell)
+		if placed_towers.has(sel_ck):
+			sel_level = _get_tower_level(placed_towers[sel_ck]["tower"])
+
+	for cell_pos in all_cells:
+		var world_pos = tilemap.map_to_local(cell_pos)
+		var occupied  = is_cell_occupied(cell_pos)
+		var buildable = check_tile_buildable(cell_pos)
+		var rect_pos  = world_pos - Vector2(GRID_SIZE / 2.0, GRID_SIZE / 2.0)
+		var rect      = Rect2(rect_pos, Vector2(GRID_SIZE, GRID_SIZE))
+
+		# ── SHOP DRAG MODE ────────────────────────────────────────────────────────
+		if drag_active:
+			if cell_pos == hover_tile:
+				var hover_color = Color.WHITE if buildable and not occupied else Color.RED
+				if merge_mode and occupied:
+					var ck = _cell_key(cell_pos)
+					if placed_towers.has(ck) and _is_valid_merge_target(placed_towers[ck], drag_tower_type, 1):
+						hover_color = Color.GREEN
+				grid_overlay.draw_rect(rect, Color(hover_color.r, hover_color.g, hover_color.b, 0.55))
+				grid_overlay.draw_rect(rect, Color(hover_color.r, hover_color.g, hover_color.b, 0.85), false, 2.0)
+				continue
+
+			if occupied:
+				var ck = _cell_key(cell_pos)
+				if merge_mode and placed_towers.has(ck) and _is_valid_merge_target(placed_towers[ck], drag_tower_type, 1):
+					grid_overlay.draw_rect(rect, Color(0.3, 1.0, 0.3, 0.20))
+					grid_overlay.draw_rect(rect, Color(0.3, 1.0, 0.3, 0.60), false, 1.5)
+				else:
+					grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.25))
+					grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.60), false, 1.5)
+			elif not buildable:
+				grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.28))
+				grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.55), false, 1.5)
+			# Empty buildable: draw nothing
+
+		# ── CLICK-TO-MERGE MODE ───────────────────────────────────────────────────
+		elif tower_selected_mode:
+			# Selected tower's own tile — bright cyan so it stands out
+			if cell_pos == selected_tower_cell:
+				grid_overlay.draw_rect(rect, Color(0.2, 0.9, 1.0, 0.40))
+				grid_overlay.draw_rect(rect, Color(0.2, 0.9, 1.0, 0.95), false, 2.5)
+				continue
+
+			if occupied:
+				var ck = _cell_key(cell_pos)
+				if placed_towers.has(ck) and _is_valid_merge_target(placed_towers[ck], selected_tower_type, sel_level):
+					# Valid merge target — green
+					if cell_pos == hover_tile:
+						grid_overlay.draw_rect(rect, Color(0.3, 1.0, 0.3, 0.55))
+						grid_overlay.draw_rect(rect, Color(0.3, 1.0, 0.3, 0.90), false, 2.0)
+					else:
+						grid_overlay.draw_rect(rect, Color(0.3, 1.0, 0.3, 0.22))
+						grid_overlay.draw_rect(rect, Color(0.3, 1.0, 0.3, 0.65), false, 1.5)
+				else:
+					# Incompatible tower — red (brighter on hover)
+					if cell_pos == hover_tile:
+						grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.55))
+						grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.90), false, 2.0)
+					else:
+						grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.22))
+						grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.55), false, 1.5)
+			elif not buildable:
+				grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.28))
+				grid_overlay.draw_rect(rect, Color(1.0, 0.2, 0.2, 0.55), false, 1.5)
+			# Empty buildable: draw nothing
+
+func update_drag_position(world_pos: Vector2):
+	if not current_drag_tower:
+		return
+
+	current_drag_tower.position = snap_to_grid(world_pos)
+
+	var tile_pos  = tilemap.local_to_map(world_pos)
+	var occupied  = is_cell_occupied(tile_pos)
+	var buildable = check_tile_buildable(tile_pos)
+
+	if occupied:
+		var ck = _cell_key(tile_pos)
+		if merge_mode and placed_towers.has(ck) and _is_valid_merge_target(placed_towers[ck], drag_tower_type, 1):
+			current_drag_tower.modulate = Color(0.3, 1.0, 0.3, 0.6)  # Green  = valid merge
 		else:
-			current_drag_tower.modulate = Color(0.3, 1, 0.3, 0.6)  # Green = valid
+			current_drag_tower.modulate = Color(1.0, 0.3, 0.3, 0.6)  # Red    = blocked
+	elif not buildable:
+		current_drag_tower.modulate = Color(1.0, 0.3, 0.3, 0.6)      # Red    = not buildable
+	else:
+		current_drag_tower.modulate = Color(0.3, 1.0, 0.3, 0.6)      # Green  = valid place
 
 func stop_drag():
+	_clear_tower_highlights()
+	merge_mode = false
+
 	if current_drag_tower:
 		current_drag_tower.queue_free()
 		current_drag_tower = null
-	
-	drag_tower_type = null
+
+	drag_tower_type = ""
 	drag_active = false
-	
-	# Hide grid overlay
+
 	if grid_overlay:
 		grid_overlay.visible = false
-	
-	# Reset cursor
+
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-	print("Stopped dragging")
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  PLACEMENT
+# ──────────────────────────────────────────────────────────────────────────────
+
+func place_tower(tower_type: String, tile_pos: Vector2i) -> bool:
+	print("=== PLACE TOWER: %s at %s ===" % [tower_type, str(tile_pos)])
+
+	if not check_tile_buildable(tile_pos):
+		print("FAIL: Tile not buildable")
+		return false
+
+	if is_cell_occupied(tile_pos):
+		print("FAIL: Cell occupied")
+		return false
+
+	var tower_cost = get_tower_cost(tower_type)
+	if game_manager and game_manager.currency < tower_cost:
+		print("FAIL: Not enough money")
+		return false
+
+	var tower_path = "res://Towers/" + tower_type + ".tscn"
+	if not ResourceLoader.exists(tower_path):
+		print("FAIL: Scene not found:", tower_path)
+		return false
+
+	var tower = load(tower_path).instantiate()
+	if not tower:
+		print("FAIL: Could not instantiate")
+		return false
+
+	tower.position = tilemap.map_to_local(tile_pos)
+	# Note: _ready() in each tower script shows TowerLevel; do NOT hide it here.
+	add_child(tower)
+
+	var ck = _cell_key(tile_pos)
+	placed_towers[ck] = {"tower": tower, "type": tower_type}
+
+	if game_manager:
+		game_manager.currency -= tower_cost
+
+	emit_signal("tower_placed", tower_type, tile_pos)
+	print("SUCCESS: %s placed at %s" % [tower_type, str(tile_pos)])
+	return true
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  MERGE — shop drag → field tower
+# ──────────────────────────────────────────────────────────────────────────────
+
+func _merge_shop_into_field(tile_pos: Vector2i):
+	# The player is buying a new tower from the shop and merging it directly into
+	# an existing same-type field tower.
+	var tower_cost = get_tower_cost(drag_tower_type)
+	if game_manager and game_manager.currency < tower_cost:
+		print("Not enough money to merge!")
+		return
+
+	if game_manager:
+		game_manager.currency -= tower_cost
+
+	var ck    = _cell_key(tile_pos)
+	var tower = placed_towers[ck]["tower"]
+	if is_instance_valid(tower) and tower.has_method("upgrade"):
+		tower.upgrade()
+		_show_level_up_popup(tower.global_position)
+		print("Shop-merge at", tile_pos)
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  MERGE — field tower → field tower (click-to-merge)
+# ──────────────────────────────────────────────────────────────────────────────
+
+func _merge_field_into_field(source_pos: Vector2i, target_pos: Vector2i):
+	var sk = _cell_key(source_pos)
+	var tk = _cell_key(target_pos)
+
+	# Free the source tower
+	var src_tower = placed_towers[sk]["tower"]
+	if is_instance_valid(src_tower):
+		src_tower.queue_free()
+	placed_towers.erase(sk)
+
+	# Upgrade the target tower
+	var tgt_tower = placed_towers[tk]["tower"]
+	if is_instance_valid(tgt_tower) and tgt_tower.has_method("upgrade"):
+		tgt_tower.upgrade()
+		_show_level_up_popup(tgt_tower.global_position)
+		print("Field-merge %s → %s" % [str(source_pos), str(target_pos)])
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  TOWER CLICK-TO-SELECT / MERGE
+# ──────────────────────────────────────────────────────────────────────────────
+
+func _select_tower(tile_pos: Vector2i):
+	var ck        = _cell_key(tile_pos)
+	var td        = placed_towers[ck]
+	var sel_type  = td["type"]
+	var sel_level = _get_tower_level(td["tower"])
+
+	# Count compatible towers: SAME TYPE and SAME LEVEL required
+	var targets: int = 0
+	for key in placed_towers:
+		if key != ck and _is_valid_merge_target(placed_towers[key], sel_type, sel_level):
+			targets += 1
+
+	if targets == 0:
+		# Nothing to merge with — give a quick red flash and bail
+		if is_instance_valid(td["tower"]):
+			td["tower"].modulate = Color(1.0, 0.4, 0.4, 1.0)
+			await get_tree().create_timer(0.4).timeout
+			if is_instance_valid(td["tower"]):
+				td["tower"].modulate = Color.WHITE
+		return
+
+	selected_tower_cell = tile_pos
+	selected_tower_type = sel_type
+	tower_selected_mode = true
+
+	_highlight_towers_for_merge(sel_type, sel_level)
+	# The selected tower itself gets a brighter highlight to show it is "held"
+	if is_instance_valid(td["tower"]):
+		td["tower"].modulate = Color(0.1, 1.4, 0.1, 1.0)
+
+	# Show the grid overlay so the player can see compatible tiles
+	grid_overlay.visible = true
+	_setup_grid_overlay_drawing()
+
+func _deselect_tower():
+	_clear_tower_highlights()
+	tower_selected_mode = false
+	selected_tower_cell = Vector2i(-9999, -9999)
+	selected_tower_type = ""
+	if not drag_active:
+		grid_overlay.visible = false
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  HIGHLIGHT HELPERS
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Returns true when `td` (a placed_towers entry) is a valid merge partner:
+# must be same type AND same level.
+func _is_valid_merge_target(td: Dictionary, target_type: String, target_level: int) -> bool:
+	if not is_instance_valid(td["tower"]):
+		return false
+	return td["type"] == target_type and _get_tower_level(td["tower"]) == target_level
+
+func _highlight_towers_for_merge(reference_type: String, reference_level: int):
+	for key in placed_towers:
+		var td = placed_towers[key]
+		if not is_instance_valid(td["tower"]):
+			continue
+		if _is_valid_merge_target(td, reference_type, reference_level):
+			td["tower"].modulate = Color(0.4, 1.0, 0.4, 1.0)   # Green — same type & level
+		else:
+			td["tower"].modulate = Color(1.0, 0.4, 0.4, 1.0)   # Red   — different type or level
+
+func _clear_tower_highlights():
+	for key in placed_towers:
+		var td = placed_towers[key]
+		if is_instance_valid(td["tower"]):
+			td["tower"].modulate = Color.WHITE
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  LEVEL-UP POPUP
+# ──────────────────────────────────────────────────────────────────────────────
+
+func _show_level_up_popup(world_pos: Vector2):
+	var lbl = Label.new()
+	lbl.text = "Level +"
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.1, 1.0))
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+	lbl.add_theme_constant_override("outline_size", 4)
+	lbl.add_theme_font_size_override("font_size", 22)
+	lbl.position = world_pos + Vector2(-30, -90)
+
+	var main = get_node("/root/Main")
+	main.add_child(lbl)
+
+	var tween = lbl.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(lbl, "position", lbl.position + Vector2(0, -55), 1.5)
+	tween.tween_property(lbl, "modulate:a", 0.0, 1.5)
+	await tween.finished
+	lbl.queue_free()
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  INPUT
+# ──────────────────────────────────────────────────────────────────────────────
+
+func _input(event):
+	# Keyboard cancel
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE:
+			if drag_active: stop_drag()
+			elif tower_selected_mode: _deselect_tower()
+		return
+
+	if not (event is InputEventMouseButton and event.pressed):
+		return
+
+	var mb = event as InputEventMouseButton
+
+	# Right-click always cancels
+	if mb.button_index == MOUSE_BUTTON_RIGHT:
+		if drag_active: stop_drag()
+		elif tower_selected_mode: _deselect_tower()
+		return
+
+	if mb.button_index != MOUSE_BUTTON_LEFT:
+		return
+
+	var mouse_pos = get_global_mouse_position()
+	var tile_pos  = tilemap.local_to_map(mouse_pos)
+
+	# ── SHOP DRAG ──────────────────────────────────────────────────────────────
+	if drag_active:
+		if merge_mode and is_cell_occupied(tile_pos):
+			var ck = _cell_key(tile_pos)
+			if placed_towers.has(ck) and _is_valid_merge_target(placed_towers[ck], drag_tower_type, 1):
+				# Drop on a same-type, same-level (1) tower → merge and consume the shop slot
+				_merge_shop_into_field(tile_pos)
+				stop_drag()
+				# Tell the UI to remove the slot (reuse the tower_placed signal path)
+				emit_signal("tower_placed", drag_tower_type, tile_pos)
+				return
+
+		# Regular placement
+		if place_tower(drag_tower_type, tile_pos):
+			stop_drag()
+		return
+
+	# ── CLICK-TO-MERGE MODE ────────────────────────────────────────────────────
+	if tower_selected_mode:
+		if is_cell_occupied(tile_pos):
+			var ck  = _cell_key(tile_pos)
+			var sel_ck = _cell_key(selected_tower_cell)
+
+			if tile_pos == selected_tower_cell:
+				_deselect_tower()                              # Clicked same tower → cancel
+			elif placed_towers.has(ck) and placed_towers.has(sel_ck) and \
+				 _is_valid_merge_target(placed_towers[ck], selected_tower_type,
+									   _get_tower_level(placed_towers[sel_ck]["tower"])):
+				# Same type AND same level → merge
+				_merge_field_into_field(selected_tower_cell, tile_pos)
+				_deselect_tower()
+			else:
+				_deselect_tower()                              # Different type or level → cancel
+		else:
+			_deselect_tower()                                  # Clicked empty → cancel
+		return
+
+	# ── IDLE — click an occupied tile to enter select mode ────────────────────
+	if is_cell_occupied(tile_pos):
+		_select_tower(tile_pos)
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  GRID / TILE HELPERS
+# ──────────────────────────────────────────────────────────────────────────────
 
 func check_tile_buildable(tile_pos: Vector2i) -> bool:
 	if not tilemap:
 		return false
-	
-	# Get tile data
-	var tile_data = tilemap.get_cell_tile_data(0, tile_pos)  # Layer 0
-	if not tile_data:
+
+	# Layer 0 must have a floor tile — otherwise it's outside the map
+	if not tilemap.get_cell_tile_data(0, tile_pos):
 		return false
-	
-	# Check custom data layers
-	var is_buildable = tile_data.get_custom_data("is_buildable")
-	var is_path = tile_data.get_custom_data("is_path")
-	var is_not_buildable = tile_data.get_custom_data("is_not_buildable")
-	
-	# Can build if is_buildable is true AND is_path is false AND is_not_buildable is false
-	return is_buildable and not is_path and not is_not_buildable
+
+	# Check EVERY layer: if any layer at this position has a blocking flag,
+	# the tile is not buildable.
+	# Layer 0 = floor / path   (tagged is_path)
+	# Layer 1 = stones / deco  (tagged is_not_buildable)
+	# Layer 2 = trees           (tagged is_not_buildable)
+	for layer in range(tilemap.get_layers_count()):
+		var tile_data = tilemap.get_cell_tile_data(layer, tile_pos)
+		if not tile_data:
+			continue   # No tile on this layer at this position — skip
+		if tile_data.get_custom_data("is_not_buildable"):
+			return false
+		if tile_data.get_custom_data("is_path"):
+			return false
+
+	return true   # No blocking flags found on any layer → buildable
 
 func is_cell_occupied(tile_pos: Vector2i) -> bool:
-	var cell_key = str(tile_pos.x) + "," + str(tile_pos.y)
-	return placed_towers.has(cell_key)
+	return placed_towers.has(_cell_key(tile_pos))
 
-func snap_to_grid(pos):
+func snap_to_grid(pos: Vector2) -> Vector2:
 	if not tilemap:
 		return pos
-	var tile_pos = tilemap.local_to_map(pos)
-	return tilemap.map_to_local(tile_pos)
+	return tilemap.map_to_local(tilemap.local_to_map(pos))
 
-func get_grid_pos(pos):
+func get_grid_pos(pos: Vector2) -> Vector2i:
 	if not tilemap:
-		return Vector2i(0, 0)
+		return Vector2i.ZERO
 	return tilemap.local_to_map(pos)
 
-func place_tower(tower_type, tile_pos: Vector2i):
-	print("========== PLACE TOWER ==========")
-	print("Attempting:", tower_type, "at tile:", tile_pos)
-	
-	# Check 1: Is tile buildable?
-	if not check_tile_buildable(tile_pos):
-		print("FAIL: Tile not buildable")
-		return false
-	
-	# Check 2: Is cell occupied?
-	if is_cell_occupied(tile_pos):
-		print("FAIL: Cell already occupied")
-		return false
-	
-	# Check 3: Get tower cost
-	var tower_cost = get_tower_cost(tower_type)
-	
-	# Check 4: Check currency
-	if game_manager:
-		if game_manager.currency < tower_cost:
-			print("FAIL: Not enough money")
-			return false
-	
-	# Check 5: Load and instantiate tower
-	var tower_path = "res://Towers/" + tower_type + ".tscn"
-	if not ResourceLoader.exists(tower_path):
-		print("FAIL: Tower scene doesn't exist:", tower_path)
-		return false
-	
-	var tower = load(tower_path).instantiate()
-	if not tower:
-		print("FAIL: Failed to instantiate tower")
-		return false
-	
-	# Set position using TileMap
-	var world_pos = tilemap.map_to_local(tile_pos)
-	tower.position = world_pos
-	
-	# Hide health/level label
-	var health_label = tower.get_node_or_null("TowerLevel")
-	if health_label:
-		health_label.visible = false
-	
-	# Add as child
-	add_child(tower)
-	
-	# Mark as placed
-	var cell_key = str(tile_pos.x) + "," + str(tile_pos.y)
-	placed_towers[cell_key] = tower
-	
-	# Deduct currency
-	if game_manager:
-		game_manager.currency -= tower_cost
-	
-	emit_signal("tower_placed", tower_type, tile_pos)
-	print("SUCCESS: Tower placed!")
-	print("=================================")
-	return true
-
-func get_tower_cost(tower_type):
+func get_tower_cost(tower_type: String) -> int:
 	match tower_type:
-		"TowerBase":
-			return 50
-		"SlowTower":
-			return 75
-		_:
-			return 50
+		"TowerBase": return 50
+		"SlowTower": return 75
+		"aoe_tower": return 100
+		_:           return 50
 
-func _input(event):
-	# Handle mouse clicks for tower placement
-	if drag_active and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var mouse_pos = get_global_mouse_position()
-		var tile_pos = tilemap.local_to_map(mouse_pos)
-		
-		if place_tower(drag_tower_type, tile_pos):
-			stop_drag()
-	
-	# Cancel with right click or ESC
-	if drag_active and event.is_action_pressed("ui_cancel"):
-		stop_drag()
-	if drag_active and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
-		stop_drag()
+func _cell_key(tile_pos: Vector2i) -> String:
+	return "%d,%d" % [tile_pos.x, tile_pos.y]

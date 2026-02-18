@@ -17,6 +17,7 @@ var is_ghost: bool = false
 var facing_right: bool = true            # Tracks which way the tower is facing
 var current_target = null
 var enemies_in_range: Array = []
+var attack_sfx: AudioStreamPlayer = null
 
 @onready var range_shape: CollisionShape2D = $Range
 @onready var attack_timer: Timer = $Attacktimer
@@ -25,6 +26,12 @@ var enemies_in_range: Array = []
 func _ready():
 	if is_ghost:
 		return
+
+	# ── Attack SFX ────────────────────────────────────────────────────────────
+	attack_sfx = AudioStreamPlayer.new()
+	attack_sfx.stream = load("res://Music/BaseTower/Sword.mp3")
+	attack_sfx.volume_db = -6.0
+	add_child(attack_sfx)
 
 	# Shape is a RectangleShape2D — resize it to match the exported range values
 	if range_shape and range_shape.shape is RectangleShape2D:
@@ -46,7 +53,7 @@ func _ready():
 	if level_label:
 		level_label.visible = true
 		level_label.text = str(level)
-		level_label.position = Vector2(-16, -115)
+		level_label.position = Vector2(-16, -70)
 
 	queue_redraw()
 
@@ -96,6 +103,8 @@ func _face_target(target: Node2D):
 func _on_attack_timer_timeout():
 	if current_target and is_instance_valid(current_target):
 		current_target.take_damage(base_damage)
+		if attack_sfx and not attack_sfx.playing:
+			attack_sfx.play()
 
 # ── Area2D callbacks ─────────────────────────────────────────────────────────
 func _on_body_entered(body: Node2D):
@@ -115,8 +124,9 @@ func upgrade():
 	queue_redraw()
 
 func _apply_upgrade_stats():
-	base_damage = int(base_damage * 1.5)
-	range_radius *= 1.1
+	# Each level: +5 flat damage
+	base_damage += 5
+	# Refresh collision shape dimensions (range stays the same, no size increase)
 	if range_shape and range_shape.shape is RectangleShape2D:
 		range_shape.shape.size = Vector2(range_radius, range_height)
 		range_shape.position.x = (range_radius / 2.0) if facing_right else -(range_radius / 2.0)

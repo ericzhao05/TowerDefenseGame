@@ -8,11 +8,12 @@ extends Area2D
 @export var tower_name: String = "Slow Tower"
 @export var cost: int = 75
 @export var range_radius: float = 75.0
-@export var slow_amount: float = 0.5  # 0.5 = half speed
+@export var slow_amount: float = 0.9  # Level 1 = 90 % speed (mild slow)
 
 var level: int = 1
 var is_ghost: bool = false
 var slowed_enemies: Array = []  # Enemies currently inside the circle
+var slow_sfx: AudioStreamPlayer = null
 
 @onready var range_shape: CollisionShape2D = $Range
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -20,6 +21,12 @@ var slowed_enemies: Array = []  # Enemies currently inside the circle
 func _ready():
 	if is_ghost:
 		return
+
+	# ── Slow SFX ──────────────────────────────────────────────────────────────
+	slow_sfx = AudioStreamPlayer.new()
+	slow_sfx.stream = load("res://Music/SlowTower/IceTower.mp3")
+	slow_sfx.volume_db = -8.0
+	add_child(slow_sfx)
 
 	# Size the collision circle to the exported radius
 	if range_shape and range_shape.shape:
@@ -63,6 +70,8 @@ func _on_body_entered(body: Node2D):
 		slowed_enemies.append(body)
 		if body.has_method("apply_slow"):
 			body.apply_slow(slow_amount)
+		if slow_sfx and not slow_sfx.playing:
+			slow_sfx.play()
 
 func _on_body_exited(body: Node2D):
 	if slowed_enemies.has(body):
@@ -80,12 +89,14 @@ func upgrade():
 	queue_redraw()
 
 func _apply_upgrade_stats():
-	match level:
-		2:
-			slow_amount = 0.35   # Slower to 35% speed
-			range_radius = 90.0
-		3:
-			slow_amount = 0.2    # Slower to 20% speed
-			range_radius = 110.0
+	# Each level: slow multiplier drops by 0.1 (min 0.1 so enemies never fully stop)
+	# Level 1 = 0.9x  →  Level 2 = 0.8x  →  Level 3 = 0.7x …
+	slow_amount = max(0.1, slow_amount - 0.1)
+
+	# Re-apply to every enemy already inside the circle
+	for enemy in slowed_enemies:
+		if is_instance_valid(enemy) and enemy.has_method("apply_slow"):
+			enemy.apply_slow(slow_amount)
+
 	if range_shape and range_shape.shape:
 		range_shape.shape.radius = range_radius

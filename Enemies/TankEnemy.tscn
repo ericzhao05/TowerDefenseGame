@@ -102,9 +102,11 @@ animations = [{
 }]
 
 [node name="TankEnemy" unique_id=1060864187 instance=ExtResource("1_tank")]
-speed = 50.0
+speed = 45.0
 max_hp = 50
 worth = 20
+min_gold_drop = 30
+max_gold_drop = 35
 
 [node name="CollisionShape2D" parent="." index="0" unique_id=648495284]
 position = Vector2(0, 0)

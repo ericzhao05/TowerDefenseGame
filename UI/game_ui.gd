@@ -7,6 +7,7 @@ extends CanvasLayer
 @onready var lives_label    = $TopBar/LivesLabel
 @onready var tower_shop     = $TowerShop
 @onready var start_button   = $StartButton
+@onready var skip_button    = $SkipButton
 
 # References
 var game_manager = null
@@ -16,16 +17,16 @@ var pending_purchase_button = null
 func _ready():
 	game_manager = get_parent()   # UI's parent is GameManager
 
-	var level = get_node("/root/Main/Level1")
-	if level:
-		grid_manager = level.get_node_or_null("GridManager")
+	# Initial GridManager lookup (Level 1)
+	_connect_grid_manager(get_node_or_null("/root/Main/Level1"))
 
 	if game_manager:
 		game_manager.currency_changed.connect(_on_currency_changed)
 		game_manager.gems_changed.connect(_on_gems_changed)
 		game_manager.wave_completed.connect(_on_wave_completed)
 		game_manager.lives_changed.connect(_on_lives_changed)
-		game_manager.wave_ready.connect(_on_wave_ready)
+		game_manager.level_ready.connect(_on_level_ready)
+		game_manager.level_loaded.connect(_on_level_loaded)
 
 		_on_currency_changed(game_manager.currency)
 		_on_gems_changed(game_manager.gems)
@@ -35,32 +36,63 @@ func _ready():
 	else:
 		print("ERROR: GameManager not found in game_ui.gd")
 
-	if grid_manager:
-		grid_manager.tower_placed.connect(_on_tower_placed)
-		print("GridManager found")
-	else:
-		print("WARNING: GridManager not found in game_ui.gd")
-
 	if tower_shop:
 		tower_shop.purchase_tower.connect(_on_purchase_tower)
 
-	# Start button starts hidden — GameManager will show it via wave_ready signal
+	# Buttons start hidden; level_ready signal will reveal them
 	if start_button:
 		start_button.visible = false
 		start_button.pressed.connect(_on_start_pressed)
 
-# ── Start button ──────────────────────────────────────────────────────────────
-func _on_wave_ready(level_num: int, wave_num: int, total_waves: int):
+	if skip_button:
+		skip_button.visible = false
+		skip_button.pressed.connect(_on_skip_pressed)
+
+# ── Level-start button ────────────────────────────────────────────────────────
+func _on_level_ready(level_num: int):
 	if start_button:
-		start_button.text = "▶  Start Wave %d/%d" % [wave_num, total_waves]
+		if level_num >= 3:
+			start_button.text = "▶  Start Level %d  — ∞ Survive!" % level_num
+		else:
+			start_button.text = "▶  Start Level %d" % level_num
 		start_button.visible = true
+
+	# Skip button only on Level 1
+	if skip_button:
+		skip_button.visible = (level_num == 1)
+
+	# Auto-refresh the shop at the start of every new level (after Level 1)
+	if level_num > 1 and tower_shop and tower_shop.has_method("generate_shop"):
+		tower_shop.generate_shop()
+
 	update_wave_display()
 
 func _on_start_pressed():
-	if start_button:
-		start_button.visible = false
+	if start_button: start_button.visible = false
+	if skip_button:  skip_button.visible = false
 	if game_manager:
 		game_manager.start_wave_requested()
+
+func _on_skip_pressed():
+	if start_button: start_button.visible = false
+	if skip_button:  skip_button.visible = false
+	if game_manager:
+		game_manager.skip_to_next_level()
+
+# ── Level scene changed ───────────────────────────────────────────────────────
+func _on_level_loaded(level_node: Node):
+	_connect_grid_manager(level_node)
+
+func _connect_grid_manager(level_node: Node):
+	if not level_node:
+		return
+	grid_manager = level_node.get_node_or_null("GridManager")
+	if grid_manager:
+		if not grid_manager.tower_placed.is_connected(_on_tower_placed):
+			grid_manager.tower_placed.connect(_on_tower_placed)
+		print("GridManager found in " + level_node.name)
+	else:
+		print("WARNING: GridManager not found in " + level_node.name)
 
 # ── Shop ──────────────────────────────────────────────────────────────────────
 func _on_purchase_tower(tower_type: String, slot: Button):
@@ -70,7 +102,7 @@ func _on_purchase_tower(tower_type: String, slot: Button):
 	else:
 		print("ERROR: Cannot purchase tower, GridManager not found!")
 
-func _on_tower_placed(tower_type, _grid_pos):
+func _on_tower_placed(_tower_type, _grid_pos):
 	if pending_purchase_button and tower_shop:
 		tower_shop.remove_tower_slot(pending_purchase_button)
 		pending_purchase_button = null
@@ -78,15 +110,15 @@ func _on_tower_placed(tower_type, _grid_pos):
 # ── Stat displays ─────────────────────────────────────────────────────────────
 func _on_currency_changed(new_amount):
 	if currency_label:
-		currency_label.text = ": $" + str(new_amount)
+		currency_label.text = str(new_amount)
 
 func _on_gems_changed(new_amount):
 	if gems_label:
-		gems_label.text = ": " + str(new_amount)
+		gems_label.text = str(new_amount)
 
 func _on_lives_changed(new_lives):
 	if lives_label:
-		lives_label.text = "Lives: " + str(new_lives)
+		lives_label.text = str(new_lives)
 		if new_lives <= 5:
 			lives_label.modulate = Color.RED
 		elif new_lives <= 10:
@@ -98,7 +130,12 @@ func _on_wave_completed():
 	if game_manager:
 		update_wave_display()
 		if wave_label:
-			wave_label.text = "Wave %d Complete!" % game_manager.current_wave
+			var lvl  = game_manager.current_level
+			var wave = game_manager.current_wave
+			if game_manager.total_waves == 0:
+				wave_label.text = "Level %d - Wave %d Cleared!" % [lvl, wave]
+			else:
+				wave_label.text = "Level %d - Wave: %d/%d Done!" % [lvl, wave, game_manager.total_waves]
 			wave_label.modulate = Color.YELLOW
 			await get_tree().create_timer(1.0).timeout
 			wave_label.modulate = Color.WHITE
@@ -106,8 +143,12 @@ func _on_wave_completed():
 
 func update_wave_display():
 	if wave_label and game_manager:
-		wave_label.text = "Level %d  Wave %d/%d" % [
-			game_manager.current_level,
-			game_manager.current_wave,
-			game_manager.total_waves
-		]
+		var lvl  = game_manager.current_level
+		var wave = game_manager.current_wave
+		if wave == 0:
+			wave_label.text = "Level %d - Ready" % lvl
+		elif game_manager.total_waves == 0:
+			# Infinite level — no max wave number shown
+			wave_label.text = "Level %d - Wave: %d" % [lvl, wave]
+		else:
+			wave_label.text = "Level %d - Wave: %d/%d" % [lvl, wave, game_manager.total_waves]

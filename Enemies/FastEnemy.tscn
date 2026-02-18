@@ -102,9 +102,11 @@ animations = [{
 }]
 
 [node name="FastEnemy" unique_id=758739212 instance=ExtResource("1_fast")]
-speed = 200.0
+speed = 175.0
 max_hp = 5
 worth = 5
+min_gold_drop = 15
+max_gold_drop = 20
 
 [node name="CollisionShape2D" parent="." index="0" unique_id=648495284]
 position = Vector2(0.75, 0)

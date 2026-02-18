@@ -12,6 +12,7 @@ extends Area2D
 var level: int = 1
 var is_ghost: bool = false
 var enemies_in_range: Array = []
+var attack_sfx: AudioStreamPlayer = null
 
 @onready var range_shape: CollisionShape2D = $Range
 @onready var attack_timer: Timer = $Attacktimer
@@ -20,6 +21,12 @@ var enemies_in_range: Array = []
 func _ready():
 	if is_ghost:
 		return
+
+	# ── Attack SFX ────────────────────────────────────────────────────────────
+	attack_sfx = AudioStreamPlayer.new()
+	attack_sfx.stream = load("res://Music/AoeTower/lightning.mp3")
+	attack_sfx.volume_db = -4.0
+	add_child(attack_sfx)
 
 	# Size the range circle
 	if range_shape and range_shape.shape:
@@ -74,9 +81,13 @@ func _process(_delta):
 
 # ── Attack — hits every enemy in range ──────────────────────────────────────
 func _on_attack_timer_timeout():
+	var hit_any = false
 	for enemy in enemies_in_range.duplicate():
 		if is_instance_valid(enemy) and not enemy.is_dying:
 			enemy.take_damage(base_damage)
+			hit_any = true
+	if hit_any and attack_sfx and not attack_sfx.playing:
+		attack_sfx.play()
 
 # ── Area2D callbacks ─────────────────────────────────────────────────────────
 func _on_body_entered(body: Node2D):
@@ -86,6 +97,8 @@ func _on_body_entered(body: Node2D):
 		# then reset the timer so the next burst is a full cooldown away.
 		if not body.is_dying:
 			body.take_damage(base_damage)
+			if attack_sfx and not attack_sfx.playing:
+				attack_sfx.play()
 		if attack_timer:
 			attack_timer.start()  # Restart the cooldown from now
 
@@ -102,12 +115,14 @@ func upgrade():
 	queue_redraw()
 
 func _apply_upgrade_stats():
-	match level:
-		2:
-			base_damage = 12
-			range_radius = 120.0
-		3:
-			base_damage = 18
-			range_radius = 140.0
+	# Odd upgrade borders (1→2, 3→4 …): new level is EVEN → bigger radius
+	# Even upgrade borders (2→3, 4→5 …): new level is ODD  → more damage
+	if level % 2 == 0:
+		range_radius += 25.0
+		print("AOE Tower: radius → %.0f" % range_radius)
+	else:
+		base_damage += 5
+		print("AOE Tower: damage → %d" % base_damage)
+
 	if range_shape and range_shape.shape:
 		range_shape.shape.radius = range_radius
